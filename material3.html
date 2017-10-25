@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://cdn.babylonjs.com/babylon.max.js"></script>
+
+    <style>
+
+        #canvas {
+            width:100%;
+            height:100%;
+        }
+    </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<script>
+    window.addEventListener('DOMContentLoaded', function(){
+        var canvas = document.getElementById('canvas');
+
+        var engine = new BABYLON.Engine(canvas, true);
+
+
+
+        var createScene = function(){
+            var scene = new BABYLON.Scene(engine);
+            scene.clearColor = new BABYLON.Color3.White();
+            var box = BABYLON.Mesh.CreateBox("box",10.0,scene);
+
+            box.position = new BABYLON.Vector3(10, 0, 13);
+            box.position.y = 1;
+            //box.rotation.x = 0.75;
+            //box.rotation.z = Math.PI/2;
+
+            var ground = BABYLON.Mesh.CreateGround("ground1", 50, 50, 2, scene);
+            ground.position.y= -3.7;
+            var groundMaterial = new BABYLON.StandardMaterial("groundMaterial", scene);
+            groundMaterial.diffuseTexture = new BABYLON.Texture("fondo.jpg", scene);
+            // groundMaterial.bumpTexture = new BABYLON.Texture("normal.jpg", scene);
+            ground.material = groundMaterial;
+
+
+            var camera = new BABYLON.ArcRotateCamera("arcCam",
+                    BABYLON.Tools.ToRadians(270),
+                    BABYLON.Tools.ToRadians(90),
+                    40.0,box.position,scene);
+
+            camera.attachControl(canvas,true);
+
+            var bodyMaterial = new BABYLON.StandardMaterial("body_mat", scene);
+            bodyMaterial.diffuseColor = new BABYLON.Color3(1.0, 0.25, 0.25);
+            bodyMaterial.backFaceCulling = false;
+
+            var side = [new BABYLON.Vector3(-4, 2, -2),
+                        new BABYLON.Vector3(4, 2, -2),
+                        new BABYLON.Vector3(5, -2, -2),
+                        new BABYLON.Vector3(-7, -2, -2)                
+            ];
+
+            side.push(side[0]);    //close trapezium
+
+            var extrudePath = [new BABYLON.Vector3(0, 0, 0),     new BABYLON.Vector3(0, 0, 4)];
+
+            var carBody = BABYLON.MeshBuilder.ExtrudeShape("body", {shape: side, path: extrudePath, cap : BABYLON.Mesh.CAP_ALL}, scene);
+            carBody.material = bodyMaterial;
+
+            var wheelMaterial = new BABYLON.StandardMaterial("wheel_mat", scene);
+            var wheelTexture = new BABYLON.Texture("http://i.imgur.com/ZUWbT6L.png", scene);
+            wheelMaterial.diffuseTexture = wheelTexture;
+
+            //Set color for wheel tread as black
+            var faceColors=[];
+            faceColors[1] = new BABYLON.Color3(0,0,0);
+
+            //set texture for flat face of wheel 
+            var faceUV =[];
+            faceUV[0] = new BABYLON.Vector4(0,0,1,1);
+            faceUV[2] = new BABYLON.Vector4(0,0,1,1);
+
+            var wheel = BABYLON.MeshBuilder.CreateCylinder("wheel", {diameter: 3, height: 1, tessellation: 24, faceColors:faceColors, faceUV:faceUV}, scene);
+            wheel.material = wheelMaterial;
+
+            //rotate wheel so tread in xz plane  
+            wheel.rotation.x = Math.PI/2;
+
+            var wheelFI = BABYLON.MeshBuilder.CreateCylinder("wheelFI", {diameter: 3, height: 1, tessellation: 24, faceColors:faceColors, faceUV:faceUV}, scene);
+            wheelFI.material = wheelMaterial;
+
+            wheelFI.rotate(BABYLON.Axis.X, Math.PI/2, BABYLON.Space.WORLD);
+            wheelFI.parent = carBody;  
+
+            var wheelFO = wheelFI.createInstance("FO");
+            wheelFO.parent = carBody;
+            wheelFO.position = new BABYLON.Vector3(-4.5, -2, 2.8);
+
+            var wheelRI = wheelFI.createInstance("RI");
+            wheelRI.parent = carBody;
+            wheelRI.position = new BABYLON.Vector3(2.5, -2, -2.8);
+
+            var wheelRO = wheelFI.createInstance("RO");
+            wheelRO.parent = carBody;
+            wheelRO.position = new BABYLON.Vector3(2.5, -2, 2.8);
+
+            wheelFI.position = new BABYLON.Vector3(-4.5, -2, -2.8);
+
+                      scene.registerAfterRender(function() {
+             wheelFI.rotate(BABYLON.Axis.Z, -Math.PI/64, BABYLON.Space.WORLD); 
+             wheelFO.rotate(BABYLON.Axis.Z, -Math.PI/64, BABYLON.Space.WORLD);
+             wheelRI.rotate(BABYLON.Axis.Z, -Math.PI/64, BABYLON.Space.WORLD);
+             wheelRO.rotate(BABYLON.Axis.Z, -Math.PI/64, BABYLON.Space.WORLD);
+
+          });
+
+
+
+
+          
+
+            var light = new BABYLON.PointLight("light", 
+                new BABYLON.Vector3(-10, 10, -20 ), scene);
+
+            light.parent = carBody;
+            light.diffuse = new BABYLON.Color3(1, 1, 1);
+
+            var material = new BABYLON.StandardMaterial("material", scene);
+
+            material.diffuseTexture = new BABYLON.Texture("chuy.jpg", scene);
+            material.bumpTexture = new BABYLON.Texture("chuy_NRM.jpg", scene);
+
+
+
+            box.material = material;
+
+            return scene;
+        }
+
+        var scene = createScene()
+        engine.runRenderLoop(function(){
+            
+           // var box = scene.getMeshByName("box");
+           // box.rotation.x += 0.01;
+           // box.rotation.y += 0.01;
+
+            scene.render();
+        });
+
+    });
+</script>
+</body>
+</html>
